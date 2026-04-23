@@ -3,7 +3,6 @@ import path from "path";
 
 const dbPath = path.join(__dirname, "../../receipts.db");
 
-// 👇 Explicitly type the database instance
 export const db: DatabaseType = new Database(dbPath);
 
 // WAL mode is excellent for performance in concurrent environments
@@ -12,7 +11,6 @@ db.pragma("journal_mode = WAL");
 /**
  * We use a transaction to ensure both tables are created together.
  * I've added a separate line_items table to demonstrate proper 
- * relational design, which is a key "Judgment" point for the assignment.
  */
 const createTables = db.transaction(() => {
   // Main receipt record
@@ -27,7 +25,6 @@ const createTables = db.transaction(() => {
     )
   `).run();
 
-  // Individual line items linked to the receipt
   db.prepare(`
     CREATE TABLE IF NOT EXISTS line_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
