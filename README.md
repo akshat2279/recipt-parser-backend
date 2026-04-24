@@ -48,9 +48,7 @@ npm run dev
 
 **Inclusions**: Item name, quantity, and unit price.
 
-**Exclusions**: Taxes, tips, and service charges are stored as Receipt Metadata.
-
-**Logic**: If the LLM identifies a discount, it is treated as a negative line item to ensure the mathematical "Sum of Items" remains accurate for the user.
+**Exclusions**: Taxes, tips, and service charges.
 
 ### 3. Resiliency: The "Manual Fallback" Pipeline
 
@@ -85,20 +83,33 @@ To ensure 100% task completion even when AI fails:
 }
 ```
 
-## Product Pushback (Assignment Q5)
 
-### The Issue: Ambiguity in "Valid" Receipt Inputs
+### What are the biggest tradeoffs you made, and why?
 
-The project specification asks for a "Receipt Parser" but fails to define what constitutes a valid input. While building the upload flow, I identified a significant gap: What is the minimum acceptable image quality or document type?
+**Tradeoff 1: Conservative AI Fallback vs. Aggressive Automation**
+Chose to return blank schema when AI confidence is low rather than attempting to parse ambiguous receipts. This prioritizes data accuracy over automation volume, preventing incorrect financial data from entering the system. In a production environment, bad data is worse than no data.
 
-### My Pushback
+**Tradeoff 2: SQLite vs. PostgreSQL**
+Used SQLite for simplicity and portability instead of a more robust database. This decision prioritizes ease of deployment and zero-configuration setup over scalability and concurrent access. For a utility application with single-user usage patterns, SQLite's atomic transactions and file-based storage are sufficient.
 
-The spec assumes all uploads will be clear, well-lit receipts. In practice, users upload blurry photos, menus, or non-receipt documents.
 
-### The Solution I implemented
+### What would you do with another week?
 
-Instead of the system "guessing" and potentially saving hallucinated data, I programmed the backend to return a null-state JSON if the LLM's confidence in the document type is low. This forces a manual review.
+**Priority 1: Saved Receipts Management UI** - Build the frontend component to display previously saved receipts. Currently users can save receipts but can't view their history. Also build a mobile app to support mobile uploads.
 
-### Recommendation for Spec
 
-The requirements should include a "Validation Phase" where the system confirms the presence of a Merchant Name and Total before attempting a line-item extraction.
+**Priority 2: Receipt Validation Layer** - Implement pre-processing validation to detect non-receipt images before sending to AI, reducing costs and improving user experience.
+
+
+
+### What's one thing in this spec you'd push back on if I were your PM?
+
+**Pushback: Missing Definition of "Valid Receipt Input"**
+
+The specification asks for a "receipt parser" but never defines what constitutes a valid receipt image or minimum quality requirements. This is a critical gap because real-world users upload blurry photos, menus, invoices, and non-receipt documents.
+
+**My Implementation**: Rather than guessing and potentially saving hallucinated data, I implemented a conservative approach that returns a blank schema when AI confidence is low, forcing manual entry.
+
+**Spec Recommendation**: The requirements should include a "Validation Phase" that confirms the presence of merchant name and total before attempting line-item extraction, with clear user guidance for invalid inputs.
+
+This pushback addresses the core assumption that users will upload perfect receipt images, which doesn't align with real-world usage patterns and could lead to poor user experience or incorrect data being saved to the system.
